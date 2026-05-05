@@ -168,10 +168,10 @@ USE_TZ = True
 # STATIC_URL = 'static/'
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/var/back-maurilink/static/'
+# STATIC_ROOT = '/var/back-maurilink/static/'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = '/var/back-maurilink/media/'
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = '/var/back-maurilink/media/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
