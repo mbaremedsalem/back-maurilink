@@ -126,9 +126,11 @@ class JobOfferDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
-        # Les entreprises voient leurs offres, les candidats voient toutes les offres actives
-        if self.request.user.user_type == 'company' and hasattr(self.request.user, 'company_profile'):
-            return JobOffer.objects.filter(company=self.request.user.company_profile)
+        # Temporairement pour debug - permettre à tous les users de voir toutes les offres
+        if self.request.user.user_type == 'company':
+            # Version debug: voir toutes les offres
+            return JobOffer.objects.all()
+        
         return JobOffer.objects.filter(is_active=True)
     
 
