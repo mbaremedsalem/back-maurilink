@@ -132,6 +132,43 @@ class JobOfferDetailView(generics.RetrieveUpdateDestroyAPIView):
             return JobOffer.objects.all()
         
         return JobOffer.objects.filter(is_active=True)
+
+# jobs/views.py
+from rest_framework import generics, permissions
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import JobOffer
+from .serializers import JobOfferSerializer
+
+class CompanyJobOffersView(generics.ListAPIView):
+    """
+    API qui retourne toutes les offres d'emploi de l'entreprise connectée
+    """
+    serializer_class = JobOfferSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Vérifier que l'utilisateur est une entreprise
+        if self.request.user.user_type != 'company':
+            return JobOffer.objects.none()
+        
+        # Récupérer la première entreprise de l'utilisateur
+        company = self.request.user.company_profile.first()
+        if not company:
+            return JobOffer.objects.none()
+        
+        # Retourner les offres de cette entreprise
+        return JobOffer.objects.filter(company=company)
+    
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        return Response({
+            'company_name': request.user.company_profile.first().company_name if request.user.company_profile.first() else None,
+            'total_offers': queryset.count(),
+            'offers': serializer.data
+        })        
     
 
 #----- appel doffre -----#

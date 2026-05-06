@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('offers/', views.JobOfferListCreateView.as_view(), name='job-offers-list'),
+    path('offers/company/', views.CompanyJobOffersView.as_view(), name='company-job-offers'),
     path('offers/<int:pk>/', views.JobOfferDetailView.as_view(), name='job-offer-detail'),
 
         # Appels d'offres
