@@ -55,7 +55,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://192.168.0.171:3000",
     "http://0.0.0.0:3000",
-    "https://front-maurilink.vercel.app"
+    "https://front-maurilink.vercel.app",
+    "https://www.maurilink.site"
 
     
 ]
