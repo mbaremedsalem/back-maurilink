@@ -123,15 +123,29 @@ class JobOfferListCreateView(generics.ListCreateAPIView):
 
 class JobOfferDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = JobOfferSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]  # Correction: pas de parenthèses
+    # ou permission_classes = []  # Alternative: liste vide
     
     def get_queryset(self):
-        # Temporairement pour debug - permettre à tous les users de voir toutes les offres
-        if self.request.user.user_type == 'company':
-            # Version debug: voir toutes les offres
-            return JobOffer.objects.all()
-        
+        # Retourne toutes les offres actives pour tout le monde
         return JobOffer.objects.filter(is_active=True)
+    
+    def perform_update(self, serializer):
+        # Si tu veux garder une logique métier lors de la mise à jour
+        # Par exemple, vérifier que l'utilisateur est bien le propriétaire
+        if hasattr(self.request.user, 'user_type') and self.request.user.user_type == 'company':
+            serializer.save()
+        else:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seules les entreprises peuvent modifier les offres")
+    
+    def perform_destroy(self, instance):
+        # Logique pour la suppression
+        if hasattr(self.request.user, 'user_type') and self.request.user.user_type == 'company':
+            instance.delete()
+        else:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seules les entreprises peuvent supprimer les offres")
 
 # jobs/views.py
 from rest_framework import generics, permissions
