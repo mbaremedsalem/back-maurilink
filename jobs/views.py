@@ -147,16 +147,22 @@ class JobOfferDetailView(generics.RetrieveUpdateDestroyAPIView):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Seules les entreprises peuvent supprimer les offres")
 
+     
+    
 # jobs/views.py
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db.models import Count, Q
 from .models import JobOffer
 from .serializers import JobOfferSerializer
+from applications.models import Application
+from applications.serializers import ApplicationDetailSerializer
 
 class CompanyJobOffersView(generics.ListAPIView):
     """
     API qui retourne toutes les offres d'emploi de l'entreprise connectée
+    avec toutes les informations des candidatures pour chaque offre
     """
     serializer_class = JobOfferSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -176,14 +182,47 @@ class CompanyJobOffersView(generics.ListAPIView):
     
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+        
+        # Récupérer toutes les offres avec leurs statistiques
+        offers_data = []
+        
+        for job_offer in queryset:
+            # Récupérer toutes les candidatures pour cette offre
+            applications = Application.objects.filter(job_offer=job_offer).order_by('-applied_date')
+            
+            # Statistiques des candidatures
+            stats = {
+                'total': applications.count(),
+                'pending': applications.filter(status='pending').count(),
+                'reviewed': applications.filter(status='reviewed').count(),
+                'accepted': applications.filter(status='accepted').count(),
+                'rejected': applications.filter(status='rejected').count(),
+            }
+            
+            # Sérialiser les candidatures avec toutes les informations
+            applications_data = ApplicationDetailSerializer(
+                applications, 
+                many=True, 
+                context={'request': request}
+            ).data
+            
+            # Sérialiser l'offre
+            offer_serializer = self.get_serializer(job_offer)
+            
+            offers_data.append({
+                'offer_details': offer_serializer.data,
+                'applications_stats': stats,
+                'applications': applications_data
+            })
+        
+        company = request.user.company_profile.first()
         
         return Response({
-            'company_name': request.user.company_profile.first().company_name if request.user.company_profile.first() else None,
+            'company_name': company.company_name if company else None,
             'total_offers': queryset.count(),
-            'offers': serializer.data
-        })        
-    
+            'total_applications': sum(len(offer['applications']) for offer in offers_data),
+            'offers': offers_data
+        })
 
 #----- appel doffre -----#
 # jobs/views.py
