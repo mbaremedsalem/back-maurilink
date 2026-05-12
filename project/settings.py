@@ -133,12 +133,19 @@ DATABASES = {
 }
 
 
+# settings.py
 # EmailJS Configuration
-EMAILJS_PUBLIC_KEY = 'v1eEa1DGx7pm0Xwwo'  # À prendre de Account → API Keys
-EMAILJS_PRIVATE_KEY = 'Tkr1bUtnhsb-4_Sirqkmn'  # À prendre de Account → API Keys (même que public key pour EmailJS)
-EMAILJS_SERVICE_ID = 'service_j6rlly8'  # Ton service ID
-EMAILJS_TEMPLATE_BATCH = 'template_k1gxza4'  # ID du template batch
-EMAILJS_TEMPLATE_SIMPLE = 'template_9wj02ok'  # ID du template simple
+# EMAILJS_PUBLIC_KEY = 'v1eEa1DGx7pm0Xwwo'
+# EMAILJS_PRIVATE_KEY = 'Tkr1bUtnhsb-4_Sirqkmn'  # Ta clé privée complète
+# EMAILJS_SERVICE_ID = 'service_j6rlly8'
+# EMAILJS_TEMPLATE_BATCH = 'template_k1gxza4'
+# EMAILJS_TEMPLATE_SIMPLE = 'template_9wj02ok'
+
+# settings.py
+EMAILJS_PUBLIC_KEY = 'v1eEa1DGx7pm0Xwwo'
+EMAILJS_PRIVATE_KEY = 'Tkr1bUtnhsb-4_Sirqkmn'  # Ta vraie clé privée
+EMAILJS_SERVICE_ID = 'service_j6rlly8'
+EMAILJS_TEMPLATE_BATCH = 'template_k1gxza4'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
