@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from advertising import serializers
 from .models import Application
-from .serializers import ApplicationSerializer, ApplicationSerializer1
+from .serializers import ApplicationSerializer
 from jobs.models import JobOffer
 
 # applications/views.py
