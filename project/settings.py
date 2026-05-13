@@ -132,6 +132,7 @@ DATABASES = {
     }
 }
 
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 # settings.py
 # EmailJS Configuration
