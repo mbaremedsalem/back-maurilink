@@ -15,6 +15,8 @@ from .models import Application
 from .serializers import ApplicationSerializer
 from jobs.models import JobOffer
 
+
+
 class ApplicationCreateView(generics.CreateAPIView):
     serializer_class = ApplicationSerializer
     
