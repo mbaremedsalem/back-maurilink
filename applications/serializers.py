@@ -77,7 +77,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
         return data
     
 
-    # applications/serializers.py
+# applications/serializers.py
 from rest_framework import serializers
 from .models import Application
 from jobs.serializers import JobOfferSerializer
@@ -166,3 +166,4 @@ class ApplicationListSerializer(serializers.ModelSerializer):
         if obj.candidate:
             return obj.candidate.email
         return obj.candidate_email or "Email non fourni"
+                

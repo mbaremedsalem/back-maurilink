@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from advertising import serializers
 from .models import Application
-from .serializers import ApplicationSerializer
+from .serializers import ApplicationSerializer, ApplicationSerializer1
 from jobs.models import JobOffer
 
 # applications/views.py
@@ -139,12 +139,45 @@ class CompanyApplicationsView(generics.ListAPIView):
         
         return Application.objects.none()
 
-class UpdateApplicationStatusView(generics.UpdateAPIView):
-    serializer_class = ApplicationSerializer
+
+from rest_framework.views import APIView
+class UpdateApplicationStatusView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
-    def get_queryset(self):
-        # Seule l'entreprise propriétaire de l'offre peut modifier le statut
-        if hasattr(self.request.user, 'company_profile'):
-            return Application.objects.filter(job_offer__company=self.request.user.company_profile)
-        return Application.objects.none()
+    def put(self, request, pk):
+        
+        # 1. Vérifier l'entreprise de l'utilisateur
+        from companies.models import Company
+        try:
+            company = Company.objects.get(user=request.user)
+        except Company.DoesNotExist:
+            return Response({"detail": "Vous n'êtes pas associé à une entreprise"}, status=403)
+        
+        # 2. Vérifier la candidature
+        from applications.models import Application
+        try:
+            app = Application.objects.get(id=pk)
+        except Application.DoesNotExist:
+            return Response({"detail": f"Candidature {pk} n'existe pas"}, status=404)
+        
+        # 3. Maintenant faire la vraie requête
+        try:
+            application = Application.objects.get(
+                id=pk,
+                job_offer__company=company
+            )
+        except Application.DoesNotExist:
+            return Response(
+                {"detail": f"La candidature {pk} n'appartient pas à votre entreprise"},
+                status=404
+            )
+        
+        # 4. Mettre à jour le statut
+        new_status = request.data.get('status')
+        if new_status:
+            application.status = new_status
+            application.save()
+            print(f"Statut mis à jour: {new_status}")
+        
+        serializer = ApplicationSerializer(application)
+        return Response(serializer.data)
