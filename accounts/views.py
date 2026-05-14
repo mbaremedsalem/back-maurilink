@@ -1,8 +1,10 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+
+from services.email_service import EmailJSService
 from .models import User
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer,ForgotPasswordSerializer,ResetPasswordSerializer
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -44,3 +46,73 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     
     def get_object(self):
         return self.request.user
+    
+
+
+# views/password_reset_views.py
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny
+from django.core.cache import cache
+import random
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            # Générer le code OTP
+            result = serializer.save()
+            user = result['user']  # Récupère l'utilisateur avec email = ayadimouhssinin@gmail.com
+            otp_code = result['otp_code']
+            
+            # Envoyer l'email - user.email est exactement l'email du body
+            email_service = EmailJSService()
+            email_result = email_service.send_reset_password_otp(
+                user_email=user.email,  # ← C'est l'email du body qui reçoit le code
+                username=user.username,
+                otp_code=otp_code
+            )
+            
+            if email_result['success']:
+                return Response(
+                    {
+                        'success': True,
+                        'message': f'Un code OTP a été envoyé à {user.email}',
+                        'email': user.email
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return Response(
+                    {
+                        'success': False,
+                        'message': "Erreur lors de l'envoi de l'email",
+                        'error': email_result['message']
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Mot de passe réinitialisé avec succès'
+                },
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
