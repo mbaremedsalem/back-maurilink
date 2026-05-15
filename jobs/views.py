@@ -299,31 +299,84 @@ class CompanyRFPListView(generics.ListAPIView):
         
         return RequestForProposal.objects.filter(company__in=companies)
 
+# class RFPDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     """Détail, modification ou suppression d'un appel d'offre"""
+#     serializer_class = RequestForProposalSerializer
+#     permission_classes = [permissions.AllowAny] 
+    
+#     def get_queryset(self):
+#         user = self.request.user
+        
+#         if user.user_type == 'company':
+#             companies = user.company_profile.all()
+#             return RequestForProposal.objects.filter(company__in=companies)
+#         else:
+#             return RequestForProposal.objects.filter(is_active=True, status='open')
+    
+#     def perform_update(self, serializer):
+#         rfp = self.get_object()
+        
+#         # Vérifier que l'entreprise propriétaire fait la modification
+#         if rfp.company not in self.request.user.company_profile.all():
+#             raise PermissionDenied("Vous n'êtes pas autorisé à modifier cet appel d'offre")
+        
+#         serializer.save()
+    
+#     def perform_destroy(self, instance):
+#         if instance.company not in self.request.user.company_profile.all():
+#             raise PermissionDenied("Vous n'êtes pas autorisé à supprimer cet appel d'offre")
+        
+#         instance.is_active = False
+#         instance.status = 'cancelled'
+#         instance.save()
+
+
+from rest_framework import generics, permissions
+from rest_framework.exceptions import PermissionDenied
+from .models import RequestForProposal
+from .serializers import RequestForProposalSerializer
+
 class RFPDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Détail, modification ou suppression d'un appel d'offre"""
     serializer_class = RequestForProposalSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny] 
     
     def get_queryset(self):
         user = self.request.user
         
-        if user.user_type == 'company':
+        # Vérifier si l'utilisateur est authentifié
+        if user.is_authenticated and user.user_type == 'company':
+            # Utilisateur connecté et de type entreprise
             companies = user.company_profile.all()
             return RequestForProposal.objects.filter(company__in=companies)
         else:
+            # Utilisateur non connecté ou non entreprise
+            # Retourner uniquement les RFPs actifs et ouverts
             return RequestForProposal.objects.filter(is_active=True, status='open')
     
     def perform_update(self, serializer):
         rfp = self.get_object()
+        user = self.request.user
+        
+        # Vérifier que l'utilisateur est authentifié et est une entreprise
+        if not user.is_authenticated or user.user_type != 'company':
+            raise PermissionDenied("Vous devez être connecté en tant qu'entreprise pour modifier un appel d'offre")
         
         # Vérifier que l'entreprise propriétaire fait la modification
-        if rfp.company not in self.request.user.company_profile.all():
+        if rfp.company not in user.company_profile.all():
             raise PermissionDenied("Vous n'êtes pas autorisé à modifier cet appel d'offre")
         
         serializer.save()
     
     def perform_destroy(self, instance):
-        if instance.company not in self.request.user.company_profile.all():
+        user = self.request.user
+        
+        # Vérifier que l'utilisateur est authentifié et est une entreprise
+        if not user.is_authenticated or user.user_type != 'company':
+            raise PermissionDenied("Vous devez être connecté en tant qu'entreprise pour supprimer un appel d'offre")
+        
+        # Vérifier que l'entreprise propriétaire fait la suppression
+        if instance.company not in user.company_profile.all():
             raise PermissionDenied("Vous n'êtes pas autorisé à supprimer cet appel d'offre")
         
         instance.is_active = False
