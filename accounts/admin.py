@@ -44,24 +44,28 @@ class CustomUserAdmin(UserAdmin, ImportExportModelAdmin):
     
     def display_image(self, obj):
         """Affiche une miniature de l'image dans la liste"""
-        if obj.image:
+        if obj.image and obj.image.url:
             return format_html('<img src="{}" width="50" height="50" style="border-radius: 50%; object-fit: cover;" />', obj.image.url)
-        return format_html('<span style="color: gray;">Aucune image</span>')
+        return mark_safe('<span style="color: gray;">Aucune image</span>')
     display_image.short_description = 'Image'
     
     def display_cover_image(self, obj):
         """Affiche une miniature de l'image de couverture dans la liste"""
-        if obj.cover_image:
+        if obj.cover_image and obj.cover_image.url:
             return format_html('<img src="{}" width="50" height="50" style="border-radius: 50%; object-fit: cover;" />', obj.cover_image.url)
-        return format_html('<span style="color: gray;">Aucune image de couverture</span>')
+        return mark_safe('<span style="color: gray;">Aucune image de couverture</span>')
     display_cover_image.short_description = 'Image de couverture'
     
     def display_image_in_form(self, obj):
         """Affiche l'image en grand dans le formulaire d'édition"""
-        if obj.image:
+        if obj and obj.image and obj.image.url:
             return format_html('<img src="{}" width="150" height="150" style="border-radius: 10px; object-fit: cover;" /><br><span style="color: gray;">Image actuelle</span>', obj.image.url)
-        return format_html('<span style="color: gray;">Aucune image téléchargée</span>')
+        return mark_safe('<span style="color: gray;">Aucune image téléchargée</span>')
     display_image_in_form.short_description = 'Aperçu de l\'image'
+    
+    def make_active(self, request, queryset):
+        queryset.update(is_active=True)
+    make_active.short_description = "Activer les utilisateurs sélectionnés"
     
     def make_inactive(self, request, queryset):
         queryset.update(is_active=False)
