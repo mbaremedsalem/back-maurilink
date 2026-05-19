@@ -4,6 +4,8 @@ from django.utils.html import format_html
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources, fields
 from .models import User
+from django.utils.safestring import mark_safe
+
 
 class UserResource(resources.ModelResource):
     class Meta:
